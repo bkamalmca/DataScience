@@ -1,0 +1,69 @@
+import geopy
+#from geopy.geocoders import Nominatim
+#from geopy.extra.rate_limiter import RateLimiter
+from geopy import distance
+
+# put in start latitude, longitude and end latitude, longitude
+# geopy.distance.distance currently uses geodesic (source: documentation)
+distance.distance((31.953765, -89.234505), (30.685861, -95.017928)).miles
+
+distance.geodesic((31.953765, -89.234505), (30.685861, -95.017928)).miles
+
+distance.great_circle((31.953765, -89.234505), (30.685861, -95.017928)).miles
+
+
+
+
+
+------------------------------
+# use df.cat_name.duplicated()
+# output True if row above is the same
+users.zip_code.duplicated()
+
+users.duplicated()
+
+# keep='first'
+# mark duplicates as True except for the first occurence
+users.loc[users.duplicated(keep='first'), :]
+
+# mark all duplicates as True
+# this combines the two tables above
+users.loc[users.duplicated(keep=False), :]
+
+# drops the 7 rows
+users.drop_duplicates(keep='first').shape
+
+# drops all 14 rows
+users.drop_duplicates(keep=False).shape
+
+
+##unique values
+dataframe[‘column_name].unique()
+dataframe_name[‘column_name].nunique()
+
+
+
+------------------------------
+###Group by
+https://www.shanelynn.ie/summarising-aggregation-and-grouping-data-in-python-pandas/
+
+data.groupby(['month', 'item'])['date'].count()
+
+##where and group by
+data[data['item'] == 'call'].groupby('network')['duration'].sum()
+
+
+# produces Pandas Series
+data.groupby('month')['duration'].sum() 
+# Produces Pandas DataFrame
+data.groupby('month')[['duration']].sum()
+
+data.groupby('month', as_index=False).agg({"duration": "sum"})
+
+
+
+
+
+------------------------------
+XGBoost
+https://www.datatechnotes.com/2019/06/regression-example-with-xgbregressor-in.html

@@ -1,0 +1,26 @@
+https://github.com/codebasics/py/tree/master/Basics
+Andrew Ng - Machine learning
+Khan academy - Stats
+StatsQuest
+mathisfun.com
+kaggle
+
+
+Anaconda setup:
+Login to
+C:\ProgramData\Anaconda3\Scripts
+activate
+
+
+$ conda init --all
+# probably need to restart your shell
+$ conda activate
+
+works from below: not seperate call
+
+(base) C:\ProgramData\Anaconda3\Scripts>python
+Python 3.8.8 (default, Apr 13 2021, 15:08:03) [MSC v.1916 64 bit (AMD64)] :: Anaconda, Inc. on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import pandas
+>>> import scipy
+>>>

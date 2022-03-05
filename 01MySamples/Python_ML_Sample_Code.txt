@@ -1,0 +1,741 @@
+#--------------------
+#1. Linear Regression, read file, plot, model 
+#--------------------
+
+import pandas as pd
+import numpy as np
+from sklearn import linear_model
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('homeprices.csv')
+df
+
+df.head()
+df.shape()
+df.info()
+
+### plot from df
+df.plot.bar(x='area')
+
+%matplotlib inline
+plt.xlabel('area')
+plt.ylabel('price')
+plt.scatter(df.area,df.price,color='red',marker='+')
+
+
+new_df = df.drop('price',axis='columns')
+new_df
+price = df.price
+price
+
+# Create linear regression object
+reg = linear_model.LinearRegression()
+reg.fit(new_df,price)
+
+reg.predict([[3300]])
+reg.coef_
+reg.intercept_
+
+#Read a new file and add predicted values
+area_df = pd.read_csv("areas.csv")
+area_df.head(3)
+
+p = reg.predict(area_df)
+p
+area_df['prices']=p
+area_df
+area_df.to_csv("prediction.csv")
+
+
+### Data Preprocessing: Fill NA values with median value of a column
+df.bedrooms = df.bedrooms.fillna(df.bedrooms.median())
+
+#--------------------
+#3. Gradient descent
+#--------------------
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+%matplotlib inline
+def gradient_descent(x,y):
+    m_curr = b_curr = 0
+    rate = 0.01
+    n = len(x)
+    plt.scatter(x,y,color='red',marker='+',linewidth='5')
+    for i in range(10000):
+        y_predicted = m_curr * x + b_curr
+#         print (m_curr,b_curr, i)
+        plt.plot(x,y_predicted,color='green')
+        md = -(2/n)*sum(x*(y-y_predicted))
+        yd = -(2/n)*sum(y-y_predicted)
+        m_curr = m_curr - rate * md
+        b_curr = b_curr - rate * yd
+        
+
+x = np.array([1,2,3,4,5])
+y = np.array([5,7,9,11,13])
+
+gradient_descent(x,y)
+
+
+#--------------------
+#4. Save Model To a File Using Python Pickle
+#--------------------
+
+import pickle
+with open('model_pickle','wb') as file:
+    pickle.dump(model,file)
+    
+with open('model_pickle','rb') as file:
+    mp = pickle.load(file)
+mp.predict([[5000]])
+
+
+### Save Trained Model Using joblib
+#--------------------
+
+from sklearn.externals import joblib
+joblib.dump(model, 'model_joblib')
+
+mj = joblib.load('model_joblib')
+mj.predict([[5000]])
+
+
+
+
+#--------------------
+#5. Categorical Variables and One Hot Encoding
+#--------------------
+
+import pandas as pd
+df = pd.read_csv("homeprices.csv")
+df
+
+dummies = pd.get_dummies(df.town)
+dummies
+
+merged = pd.concat([df,dummies],axis='columns')
+merged
+
+final = merged.drop(['town'], axis='columns')
+final
+
+### Dummy Variable Trap  - drop one from category
+final = final.drop(['west windsor'], axis='columns')
+final
+
+
+X = final.drop('price', axis='columns')
+X
+y = final.price
+
+from sklearn.linear_model import LinearRegression
+model = LinearRegression()
+model.fit(X,y)
+
+model.predict(X)
+model.score(X,y)
+
+
+### Using sklearn OneHotEncoder
+#--------------------
+
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+dfle = df
+dfle.town = le.fit_transform(dfle.town)
+dfle
+
+X = dfle[['town','area']].values
+y = dfle.price.values
+
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+ct = ColumnTransformer([('town', OneHotEncoder(), [0])], remainder = 'passthrough')
+
+X = ct.fit_transform(X)
+X
+### Remove first col
+X = X[:,1:]
+
+model.fit(X,y)
+model.predict([[0,1,3400]])
+
+
+#--------------------
+#6. Train and test
+#--------------------
+
+import pandas as pd
+df = pd.read_csv("carprices.csv")
+df.head()
+
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.scatter(df['Mileage'],df['Sell Price($)'])
+
+X = df[['Mileage','Age(yrs)']]
+y = df['Sell Price($)']
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3) 
+
+
+from sklearn.linear_model import LinearRegression
+clf = LinearRegression()
+clf.fit(X_train, y_train)
+
+clf.predict(X_test)
+clf.predict_proba(X_test)
+clf.score(X_test, y_test)
+
+
+#--------------------
+#8. Logistic regression - multiclass
+#--------------------
+
+from sklearn.datasets import load_digits
+%matplotlib inline
+import matplotlib.pyplot as plt
+digits = load_digits()
+
+plt.gray() 
+for i in range(5):
+    plt.matshow(digits.images[i]) 
+
+dir(digits)
+digits.data[0]
+
+from sklearn.linear_model import LogisticRegression
+model = LogisticRegression()
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(digits.data,digits.target, test_size=0.2)
+
+
+model.fit(X_train, y_train)
+model.score(X_test, y_test)
+model.predict(digits.data[0:5])
+
+
+### Confusion matrix
+y_predicted = model.predict(X_test)
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_predicted)
+cm
+
+import seaborn as sn
+plt.figure(figsize = (10,7))
+sn.heatmap(cm, annot=True)
+plt.xlabel('Predicted')
+plt.ylabel('Truth')
+
+
+
+#--------------------
+#9. Decision tree
+#--------------------
+
+import pandas as pd
+df = pd.read_csv("salaries.csv")
+df.head()
+
+inputs = df.drop('salary_more_then_100k',axis='columns')
+target = df['salary_more_then_100k']
+
+from sklearn.preprocessing import LabelEncoder
+le_company = LabelEncoder()
+le_job = LabelEncoder()
+le_degree = LabelEncoder()
+
+inputs['company_n'] = le_company.fit_transform(inputs['company'])
+inputs['job_n'] = le_job.fit_transform(inputs['job'])
+inputs['degree_n'] = le_degree.fit_transform(inputs['degree'])
+
+inputs_n = inputs.drop(['company','job','degree'],axis='columns')
+from sklearn import tree
+
+model = tree.DecisionTreeClassifier()
+model.fit(inputs_n, target)
+
+model.score(inputs_n,target)
+
+
+
+#--------------------
+#10. Support Vector Machine - SVM
+#--------------------
+
+import pandas as pd
+from sklearn.datasets import load_iris
+iris = load_iris()
+
+iris.feature_names
+
+iris.target_names
+
+df = pd.DataFrame(iris.data,columns=iris.feature_names)
+df.head()
+
+df['target'] = iris.target
+df.head()
+df[df.target==1].head()
+
+df['flower_name'] =df.target.apply(lambda x: iris.target_names[x])
+df.head()
+df[45:55]
+
+df0 = df[:50]
+df1 = df[50:100]
+df2 = df[100:]
+
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.xlabel('Sepal Length')
+plt.ylabel('Sepal Width')
+plt.scatter(df0['sepal length (cm)'], df0['sepal width (cm)'],color="green",marker='+')
+plt.scatter(df1['sepal length (cm)'], df1['sepal width (cm)'],color="blue",marker='.')
+
+plt.xlabel('Petal Length')
+plt.ylabel('Petal Width')
+plt.scatter(df0['petal length (cm)'], df0['petal width (cm)'],color="green",marker='+')
+plt.scatter(df1['petal length (cm)'], df1['petal width (cm)'],color="blue",marker='.')
+
+from sklearn.model_selection import train_test_split
+X = df.drop(['target','flower_name'], axis='columns')
+y = df.target
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+from sklearn.svm import SVC
+model = SVC()
+model.fit(X_train, y_train)
+
+model.score(X_test, y_test)
+
+
+### Tune params - Regularization - C
+
+model_C = SVC(C=1)
+model_C.fit(X_train, y_train)
+model_C.score(X_test, y_test)
+
+model_C = SVC(C=10)
+model_C.fit(X_train, y_train)
+model_C.score(X_test, y_test)
+
+
+### Tune params - Gamma
+
+model_g = SVC(gamma=10)
+model_g.fit(X_train, y_train)
+model_g.score(X_test, y_test)
+
+
+### Tune params - Kernel
+
+model_linear_kernal = SVC(kernel='linear')
+model_linear_kernal.fit(X_train, y_train)
+model_linear_kernal.score(X_test, y_test)
+
+
+
+#--------------------
+#11. Random forest
+#--------------------
+
+import pandas as pd
+from sklearn.datasets import load_digits
+digits = load_digits()
+
+dir(digits)
+
+df = pd.DataFrame(digits.data)
+df.head()
+df['target'] = digits.target
+
+
+X = df.drop('target',axis='columns')
+y = df.target
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2)
+
+from sklearn.ensemble import RandomForestClassifier
+model = RandomForestClassifier(n_estimators=20)
+model.fit(X_train, y_train)
+
+model.score(X_test, y_test)
+y_predicted = model.predict(X_test)
+
+### Confusion matrix
+
+
+
+
+#--------------------
+#12. K-Fold Cross validation
+#--------------------
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+from sklearn.datasets import load_digits
+import matplotlib.pyplot as plt
+digits = load_digits()
+
+
+### K-Fold example
+from sklearn.model_selection import KFold
+kf = KFold(n_splits=3)
+kf
+for train_index, test_index in kf.split([1,2,3,4,5,6,7,8,9]):
+    print(train_index, test_index)
+    
+
+### K-fold digits example
+def get_score(model, X_train, X_test, y_train, y_test):
+    model.fit(X_train, y_train)
+    return model.score(X_test, y_test)
+    
+from sklearn.model_selection import StratifiedKFold
+folds = StratifiedKFold(n_splits=3)
+
+scores_logistic = []
+scores_svm = []
+scores_rf = []
+
+for train_index, test_index in folds.split(digits.data,digits.target):
+    X_train, X_test, y_train, y_test = digits.data[train_index], digits.data[test_index], \
+                                       digits.target[train_index], digits.target[test_index]
+    scores_logistic.append(get_score(LogisticRegression(solver='liblinear',multi_class='ovr'), X_train, X_test, y_train, y_test))  
+    scores_svm.append(get_score(SVC(gamma='auto'), X_train, X_test, y_train, y_test))
+    scores_rf.append(get_score(RandomForestClassifier(n_estimators=40), X_train, X_test, y_train, y_test))    
+
+
+
+### cross validation
+from sklearn.model_selection import cross_val_score
+cross_val_score(LogisticRegression(solver='liblinear',multi_class='ovr'), digits.data, digits.target,cv=3)
+cross_val_score(SVC(gamma='auto'), digits.data, digits.target,cv=3)
+cross_val_score(RandomForestClassifier(n_estimators=40),digits.data, digits.target,cv=3)
+
+
+scores3 = cross_val_score(RandomForestClassifier(n_estimators=30),digits.data, digits.target, cv=10)
+np.average(scores3)
+
+
+
+
+#--------------------
+#13. K-Means clustering - unsupervised
+#--------------------
+
+
+from sklearn.cluster import KMeans
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from matplotlib import pyplot as plt
+%matplotlib inline
+
+df = pd.read_csv("income.csv")
+df.head()
+
+plt.scatter(df.Age,df['Income($)'])
+plt.xlabel('Age')
+plt.ylabel('Income($)')
+
+### number of clusters
+km = KMeans(n_clusters=3)
+y_predicted = km.fit_predict(df[['Age','Income($)']])
+y_predicted
+df['cluster']=y_predicted
+df.head()
+
+km.cluster_centers_
+
+df1 = df[df.cluster==0]
+df2 = df[df.cluster==1]
+df3 = df[df.cluster==2]
+plt.scatter(df1.Age,df1['Income($)'],color='green')
+plt.scatter(df2.Age,df2['Income($)'],color='red')
+plt.scatter(df3.Age,df3['Income($)'],color='black')
+plt.scatter(km.cluster_centers_[:,0],km.cluster_centers_[:,1],color='purple',marker='*',label='centroid')
+plt.xlabel('Age')
+plt.ylabel('Income ($)')
+plt.legend()
+
+
+### Min max scaler for bigger range values
+#------------------
+scaler = MinMaxScaler()
+
+scaler.fit(df[['Income($)']])
+df['Income($)'] = scaler.transform(df[['Income($)']])
+
+scaler.fit(df[['Age']])
+df['Age'] = scaler.transform(df[['Age']])
+
+
+
+### number of clusters
+km = KMeans(n_clusters=3)
+y_predicted = km.fit_predict(df[['Age','Income($)']])
+y_predicted
+df['cluster']=y_predicted
+df.head()
+
+km.cluster_centers_
+
+df1 = df[df.cluster==0]
+df2 = df[df.cluster==1]
+df3 = df[df.cluster==2]
+plt.scatter(df1.Age,df1['Income($)'],color='green')
+plt.scatter(df2.Age,df2['Income($)'],color='red')
+plt.scatter(df3.Age,df3['Income($)'],color='black')
+plt.scatter(km.cluster_centers_[:,0],km.cluster_centers_[:,1],color='purple',marker='*',label='centroid')
+plt.xlabel('Age')
+plt.ylabel('Income ($)')
+plt.legend()
+
+### Elbow plot
+#-------------
+
+sse = []
+k_rng = range(1,10)
+for k in k_rng:
+    km = KMeans(n_clusters=k)
+    km.fit(df[['Age','Income($)']])
+    sse.append(km.inertia_)
+    
+plt.xlabel('K')
+plt.ylabel('Sum of squared error')
+plt.plot(k_rng,sse)
+
+
+
+#--------------------
+#14. Naive bayes classifier
+#--------------------
+
+import pandas as pd
+df = pd.read_csv("titanic.csv")
+df.head()
+
+df.drop(['PassengerId','Name','SibSp','Parch','Ticket','Cabin','Embarked'],axis='columns',inplace=True)
+df.head()
+inputs = df.drop('Survived',axis='columns')
+target = df.Survived
+
+dummies = pd.get_dummies(inputs.Sex)
+dummies.head(3)
+inputs = pd.concat([inputs,dummies],axis='columns')
+inputs.head(3)
+
+
+inputs.drop(['Sex','male'],axis='columns',inplace=True)
+inputs.head(3)
+
+inputs.columns[inputs.isna().any()]
+inputs.Age = inputs.Age.fillna(inputs.Age.mean())
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(inputs,target,test_size=0.3)
+from sklearn.naive_bayes import GaussianNB
+model = GaussianNB()
+
+model.fit(X_train,y_train)
+model.score(X_test,y_test)
+
+model.predict_proba(X_test[:10])
+
+from sklearn.model_selection import cross_val_score
+cross_val_score(GaussianNB(),X_train, y_train, cv=5)
+
+##$ this is better for titanic
+from sklearn.model_selection import cross_val_score
+cross_val_score(RandomForestClassifier(n_estimators=20),X_train, y_train, cv=8)
+
+
+
+# Naive bayes classifier - MultinomialNB()
+#--------------------
+
+###Email spam
+
+
+
+
+
+#--------------------
+#15. GridSearchCV - Hyperparameter
+#--------------------
+
+from sklearn import svm, datasets
+iris = datasets.load_iris()
+
+import pandas as pd
+df = pd.DataFrame(iris.data,columns=iris.feature_names)
+df['flower'] = iris.target
+df['flower'] = df['flower'].apply(lambda x: iris.target_names[x])
+df[47:150]
+
+
+
+from sklearn.model_selection import GridSearchCV
+clf = GridSearchCV(svm.SVC(gamma='auto'), {
+    'C': [1,10,20],
+    'kernel': ['rbf','linear']
+}, cv=5, return_train_score=False)
+clf.fit(iris.data, iris.target)
+clf.cv_results_
+
+df = pd.DataFrame(clf.cv_results_)
+df[['param_C','param_kernel','mean_test_score']]
+
+clf.best_params_
+clf.best_score_
+dir(clf)
+
+
+
+from sklearn.model_selection import RandomizedSearchCV
+rs = RandomizedSearchCV(svm.SVC(gamma='auto'), {
+        'C': [1,10,20],
+        'kernel': ['rbf','linear']
+    }, 
+    cv=5, 
+    return_train_score=False, 
+    n_iter=2
+)
+rs.fit(iris.data, iris.target)
+pd.DataFrame(rs.cv_results_)[['param_C','param_kernel','mean_test_score']]
+
+
+
+
+from sklearn import svm
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+
+model_params = {
+    'svm': {
+        'model': svm.SVC(gamma='auto'),
+        'params' : {
+            'C': [1,10,20],
+            'kernel': ['rbf','linear']
+        }  
+    },
+    'random_forest': {
+        'model': RandomForestClassifier(),
+        'params' : {
+            'n_estimators': [1,5,10]
+        }
+    },
+    'logistic_regression' : {
+        'model': LogisticRegression(solver='liblinear',multi_class='auto'),
+        'params': {
+            'C': [1,5,10]
+        }
+    }
+}
+
+scores = []
+
+for model_name, mp in model_params.items():
+    clf =  GridSearchCV(mp['model'], mp['params'], cv=5, return_train_score=True)
+    clf.fit(iris.data, iris.target)
+    scores.append({
+        'model': model_name,
+        'best_score': clf.best_score_,
+        'best_params': clf.best_params_
+    })
+    
+df = pd.DataFrame(scores,columns=['model','best_score','best_params'])
+df
+
+
+
+
+#--------------------
+#14. L1 and L2 Regularization
+#--------------------
+
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+
+
+# read dataset
+dataset = pd.read_csv('./Melbourne_housing_FULL.csv')
+dataset.nunique()
+
+# let's use limited columns which makes more sense for serving our purpose
+cols_to_use = ['Suburb', 'Rooms', 'Type', 'Method', 'SellerG', 'Regionname', 'Propertycount', 
+               'Distance', 'CouncilArea', 'Bedroom2', 'Bathroom', 'Car', 'Landsize', 'BuildingArea', 'Price']
+dataset = dataset[cols_to_use]
+
+dataset.isna().sum()
+
+# Some feature's missing values can be treated as zero (another class for NA values or absence of that feature)
+# like 0 for Propertycount, Bedroom2 will refer to other class of NA values
+# like 0 for Car feature will mean that there's no car parking feature with house
+cols_to_fill_zero = ['Propertycount', 'Distance', 'Bedroom2', 'Bathroom', 'Car']
+dataset[cols_to_fill_zero] = dataset[cols_to_fill_zero].fillna(0)
+
+# other continuous features can be imputed with mean for faster results since our focus is on Reducing overfitting
+# using Lasso and Ridge Regression
+dataset['Landsize'] = dataset['Landsize'].fillna(dataset.Landsize.mean())
+dataset['BuildingArea'] = dataset['BuildingArea'].fillna(dataset.BuildingArea.mean())
+
+dataset.dropna(inplace=True)
+dataset = pd.get_dummies(dataset, drop_first=True)
+
+X = dataset.drop('Price', axis=1)
+y = dataset['Price']
+
+###L1 Regularization
+--------------------
+from sklearn import linear_model
+lasso_reg = linear_model.Lasso(alpha=50, max_iter=100, tol=0.1)
+lasso_reg.fit(train_X, train_y)
+
+lasso_reg.score(test_X, test_y)
+lasso_reg.score(train_X, train_y)
+
+from sklearn.linear_model import Ridge
+ridge_reg= Ridge(alpha=50, max_iter=100, tol=0.1)
+ridge_reg.fit(train_X, train_y)
+
+###L2 Regularization
+--------------------
+from sklearn.linear_model import Ridge
+ridge_reg= Ridge(alpha=50, max_iter=100, tol=0.1)
+ridge_reg.fit(train_X, train_y)
+
+ridge_reg.score(test_X, test_y)
+ridge_reg.score(train_X, train_y)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
