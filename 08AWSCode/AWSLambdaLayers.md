@@ -1,7 +1,6 @@
-# AWS Lambda add layers steps
+# AWS Lambda Add layer
 
-
-## Steps to create pandas package in virtual env from EC2/Sagemaker instance  
+### Steps to create pandas package in virtual env from EC2/Sagemaker instance  
 
 * Create venv and install pandas  (used python3.7)
 ```
@@ -18,17 +17,18 @@
   cd python  
   cp -r ../env/lib/python3.7/site-packages/* .
 ````  
-* zip the directory and copy to s3  
+
+* Zip the directory and copy to s3  
  ````
   zip -r pandas_layer.zip python 
-  aws s3 cp pandas_layer.zip s3://dgx-ds-use1-dev-landing-s3/lambda-layers/
+  aws s3 cp pandas_layer.zip s3://XXX-s3/lambda-layers/
 ````
 
 * Add layers to Lambda function - Python3.7 runtime
 
-* The function executed with python module
+* The function completed successfully with python module
 
-* To install zip 
+* To install zip in EC2 
 ```
   sudo yum install zip
 ```
