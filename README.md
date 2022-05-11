@@ -4,7 +4,7 @@ My Datascience practice and learning projects
 
 01MySamples - my basic practice code
 
-02AWSSamples - AWS samples to proctice
+02AWSSamples - AWS samples to practice
 
 03Kaggle - practice kaggle problems
 
